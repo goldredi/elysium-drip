@@ -304,14 +304,18 @@ hr.ln.g{background:linear-gradient(90deg,transparent,rgba(57,255,20,.15),transpa
     <div class="sp-layer">// secret language · bigram engine · 5 deco styles · layer 07</div>
     <div class="sp-box">
       <div class="sp-log" id="spLog"></div>
-      <div class="sp-q">идентифицируй себя.<br><span style="color:rgba(57,255,20,.25);font-size:9px">введи одноразовый ключ доступа</span></div>
+      <div class="sp-q">идентифицируй себя.<br><span style="color:rgba(57,255,20,.25);font-size:9px">первый вход — логин + пароль + код от админа</span></div>
       <div class="sp-row">
         <span class="sp-pre">&gt;</span>
-        <input class="sp-in" id="spName" placeholder="твоё имя..." autocomplete="off" spellcheck="false" maxlength="40">
+        <input class="sp-in" id="spName" placeholder="логин..." autocomplete="off" spellcheck="false" maxlength="40">
       </div>
       <div class="sp-row" style="margin-top:6px">
         <span class="sp-pre">&gt;</span>
-        <input class="sp-in" id="spIn" placeholder="ключ доступа..." autocomplete="off" spellcheck="false" maxlength="60">
+        <input class="sp-in" id="spIn" type="password" placeholder="пароль..." autocomplete="off" spellcheck="false" maxlength="60">
+      </div>
+      <div class="sp-row" style="margin-top:6px">
+        <span class="sp-pre">&gt;</span>
+        <input class="sp-in" id="spCode" placeholder="код (только первый вход)..." autocomplete="off" spellcheck="false" maxlength="40">
       </div>
       <div class="sp-err" id="spErr"></div>
     </div>
@@ -915,30 +919,40 @@ let isAdmin=localStorage.getItem('em_is_admin')==='true';
   }
 })();
 
-// Name field → focus to key on Enter
+// Name field → admin check or focus to password on Enter
 document.getElementById('spName')?.addEventListener('keydown',function(e){
-  if(e.key==='Enter'){e.preventDefault();document.getElementById('spIn')?.focus();}
+  if(e.key!=='Enter')return;
+  e.preventDefault();
+  if(this.value.trim()==='12071998'){window.location.href='admin.html';return;}
+  document.getElementById('spIn')?.focus();
 });
 
-// Splash key validation — checks backend API first, then localStorage fallback
-document.getElementById('spIn')?.addEventListener('keydown',async function(e){
+// Password field → focus to code on Enter
+document.getElementById('spIn')?.addEventListener('keydown',function(e){
+  if(e.key!=='Enter')return;
+  e.preventDefault();
+  document.getElementById('spCode')?.focus();
+});
+
+// Code field → submit on Enter
+document.getElementById('spCode')?.addEventListener('keydown',async function(e){
   if(e.key!=='Enter')return;
   const name=(document.getElementById('spName')?.value||'').trim();
-  const key=this.value.trim();
+  const pass=(document.getElementById('spIn')?.value||'').trim();
+  const code=this.value.trim();
   const err=document.getElementById('spErr');
-  if(!name){err.className='sp-err bad';err.textContent='// введи имя';document.getElementById('spName')?.focus();return;}
-  if(!key){err.className='sp-err bad';err.textContent='// введи ключ';return;}
-  // Admin backdoor
-  if(name==='12071998'){window.location.href='/admin';return;}
-  // Save name
+  if(!name){err.className='sp-err bad';err.textContent='// введи логин';document.getElementById('spName')?.focus();return;}
+  if(name==='12071998'){window.location.href='admin.html';return;}
+  if(!pass){err.className='sp-err bad';err.textContent='// введи пароль';document.getElementById('spIn')?.focus();return;}
   localStorage.setItem('em_username',name);
-  // Try backend API first (works when served from server)
+  // Try backend API first
   try{
     const tgData=window.Telegram?.WebApp?.initDataUnsafe;
-    const resp=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:key,telegram_id:tgData?.user?.id||null,telegram_username:tgData?.user?.username||null})});
+    const body={username:name,password:pass,telegram_id:tgData?.user?.id||null,telegram_username:tgData?.user?.username||null};
+    if(code)body.code=code;
+    const resp=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     if(resp.ok){
       const data=await resp.json();
-      localStorage.setItem('em_access_key',key);
       localStorage.setItem('em_token',data.token);
       if(data.is_admin){localStorage.setItem('em_is_admin','true');isAdmin=true;}
       isUnlocked=true;
@@ -947,14 +961,14 @@ document.getElementById('spIn')?.addEventListener('keydown',async function(e){
     }
   }catch(ex){}
   // Fallback: check localStorage keys (offline/file mode)
+  const keyVal=code||pass;
   let adminKeys=[];
   try{adminKeys=JSON.parse(localStorage.getItem('em_admin_keys')||'[]');}catch(ex){}
-  const found=adminKeys.find(k=>k.key===key);
-  if(!found){err.className='sp-err bad';err.textContent='// ✗ ключ не найден';return;}
+  const found=adminKeys.find(k=>k.key===keyVal);
+  if(!found){err.className='sp-err bad';err.textContent='// ✗ не найдено';return;}
   if(found.isUsed){err.className='sp-err bad';err.textContent='// ✗ ключ уже использован';return;}
   found.isUsed=true;found.usedAt=new Date().toISOString();found.usedBy=name;
   try{localStorage.setItem('em_admin_keys',JSON.stringify(adminKeys));}catch(ex){}
-  localStorage.setItem('em_access_key',key);
   if(found.isAdmin){localStorage.setItem('em_is_admin','true');isAdmin=true;}
   isUnlocked=true;
   enterApp(err);
