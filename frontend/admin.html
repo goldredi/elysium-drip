@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>emojirean // admin</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050508;--bg2:#070710;--green:#39ff14;--amber:#ffb000;--red:#ff2244;--cyan:#00e5ff;--text:#8a9a8a;--text2:#4a6a4a;--border:#14201a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:14px;min-height:100vh;min-height:100dvh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px)}
+.wrap{max-width:900px;margin:0 auto;padding:16px}
+.hdr{font-family:'VT323',monospace;font-size:36px;color:var(--green);letter-spacing:4px;text-shadow:0 0 20px rgba(57,255,20,.3);margin-bottom:4px}
+.sub{font-size:10px;color:var(--text2);letter-spacing:2px;margin-bottom:20px}
+
+/* Auth */
+#adminAuth{max-width:400px;margin:80px auto;text-align:center}
+#adminAuth .hdr{margin-bottom:16px}
+.auth-input{width:100%;background:#000;border:1px solid rgba(57,255,20,.2);border-bottom:2px solid rgba(57,255,20,.3);color:var(--green);font-family:'Share Tech Mono',monospace;font-size:16px;padding:10px;outline:none;text-align:center}
+.auth-input:focus{border-color:rgba(57,255,20,.5)}
+.auth-input::placeholder{color:#1a2a1a}
+.auth-btn{width:100%;margin-top:8px;background:transparent;border:1px solid rgba(57,255,20,.3);color:var(--green);font-family:'Share Tech Mono',monospace;font-size:12px;padding:8px;cursor:pointer;letter-spacing:1px;transition:all .1s}
+.auth-btn:hover{background:rgba(57,255,20,.06)}
+.auth-err{font-size:11px;color:var(--red);margin-top:8px;min-height:16px}
+
+/* Dashboard */
+#adminDash{display:none}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:16px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);padding:12px;text-align:center}
+.stat-card .val{font-family:'VT323',monospace;font-size:32px;color:var(--green);text-shadow:0 0 10px rgba(57,255,20,.2)}
+.stat-card .lbl{font-size:9px;color:var(--text2);letter-spacing:1px;margin-top:2px}
+
+.panel{background:var(--bg2);border:1px solid var(--border);margin-bottom:12px}
+.panel-t{font-size:9px;color:var(--text2);padding:6px 10px;border-bottom:1px solid var(--border);letter-spacing:1px;display:flex;align-items:center;gap:6px}
+.panel-t::before{content:'//';color:rgba(57,255,20,.3)}
+.panel-b{padding:10px;overflow-x:auto}
+
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{text-align:left;color:rgba(57,255,20,.5);padding:4px 8px;border-bottom:1px solid var(--border);font-weight:normal;letter-spacing:1px;white-space:nowrap}
+td{padding:4px 8px;border-bottom:1px solid #0a0a12;color:var(--text);white-space:nowrap}
+tr:hover td{background:rgba(57,255,20,.02)}
+.tag{font-size:8px;padding:1px 4px;letter-spacing:.5px;border:1px solid}
+.tag-admin{color:var(--red);border-color:rgba(255,34,68,.3)}
+.tag-create{color:var(--amber);border-color:rgba(255,176,0,.3)}
+.tag-user{color:var(--text2);border-color:#1a1a1a}
+.toggle-btn{background:transparent;border:1px solid #1a1a1a;color:var(--text2);font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 6px;cursor:pointer;transition:all .1s}
+.toggle-btn:hover{border-color:rgba(57,255,20,.3);color:var(--green)}
+.online{color:var(--green)}.offline{color:#333}
+.refresh-btn{background:transparent;border:1px solid rgba(57,255,20,.2);color:var(--green);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 12px;cursor:pointer;letter-spacing:1px;transition:all .1s;margin-bottom:12px}
+.refresh-btn:hover{background:rgba(57,255,20,.06)}
+
+@media(max-width:640px){
+  .wrap{padding:10px}
+  table{font-size:10px}
+  th,td{padding:3px 4px}
+}
+</style>
+</head>
+<body>
+
+<!-- Admin Auth (no splash screen) -->
+<div id="adminAuth">
+  <div class="hdr">emojirean</div>
+  <div class="sub">// admin panel</div>
+  <input class="auth-input" id="adminCode" placeholder="admin secret..." autocomplete="off" autofocus>
+  <button class="auth-btn" onclick="adminLogin()">AUTHENTICATE</button>
+  <div class="auth-err" id="adminErr"></div>
+</div>
+
+<!-- Dashboard -->
+<div id="adminDash">
+<div class="wrap">
+  <div class="hdr">emojirean // admin</div>
+  <div class="sub">// control panel | user management | analytics</div>
+
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card"><div class="val" id="statUsers">--</div><div class="lbl">USERS</div></div>
+    <div class="stat-card"><div class="val" id="statLangs">--</div><div class="lbl">LANGUAGES</div></div>
+    <div class="stat-card"><div class="val" id="statEncodes">--</div><div class="lbl">ENCODES</div></div>
+  </div>
+
+  <button class="refresh-btn" onclick="loadDashboard()">REFRESH</button>
+
+  <div class="panel">
+    <div class="panel-t">users[]</div>
+    <div class="panel-b">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>USERNAME</th>
+            <th>TG</th>
+            <th>CODE</th>
+            <th>ROLE</th>
+            <th>CREATED</th>
+            <th>LAST SEEN</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="usersBody">
+          <tr><td colspan="8" style="color:#333;text-align:center;padding:20px">loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-t">access_keys[] <button class="toggle-btn" style="margin-left:auto" onclick="generateKey()">+ GENERATE KEY</button></div>
+    <div class="panel-b">
+      <table>
+        <thead>
+          <tr>
+            <th>KEY</th>
+            <th>STATUS</th>
+            <th>USED BY</th>
+            <th>TG</th>
+            <th>IP</th>
+            <th>NOTE</th>
+            <th>CREATED</th>
+            <th>USED AT</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="keysBody">
+          <tr><td colspan="9" style="color:#333;text-align:center;padding:20px">loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+'use strict';
+
+let adminToken = localStorage.getItem('em_admin_token') || null;
+
+async function api(path, method = 'GET', body = null) {
+  const opts = { method, headers: {} };
+  if (adminToken) opts.headers['Authorization'] = 'Bearer ' + adminToken;
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  const res = await fetch('/api' + path, opts);
+  if (!res.ok) {
+    if (res.status === 401 || res.status === 403) { adminToken = null; localStorage.removeItem('em_admin_token'); showAuth(); }
+    throw new Error('failed');
+  }
+  return res.json();
+}
+
+function showAuth() {
+  document.getElementById('adminAuth').style.display = '';
+  document.getElementById('adminDash').style.display = 'none';
+}
+
+function showDash() {
+  document.getElementById('adminAuth').style.display = 'none';
+  document.getElementById('adminDash').style.display = '';
+  loadDashboard();
+}
+
+async function adminLogin() {
+  const code = document.getElementById('adminCode').value.trim();
+  if (!code) return;
+  try {
+    const data = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    }).then(r => r.json());
+
+    if (data.token && data.is_admin) {
+      adminToken = data.token;
+      localStorage.setItem('em_admin_token', adminToken);
+      showDash();
+    } else {
+      document.getElementById('adminErr').textContent = '// not admin';
+      adminToken = null;
+    }
+  } catch (e) {
+    document.getElementById('adminErr').textContent = '// auth failed';
+  }
+}
+
+document.getElementById('adminCode').addEventListener('keydown', e => {
+  if (e.key === 'Enter') adminLogin();
+});
+
+async function loadDashboard() {
+  try {
+    const [stats, users, keys] = await Promise.all([
+      api('/admin/stats'),
+      api('/admin/users'),
+      api('/admin/keys'),
+    ]);
+
+    document.getElementById('statUsers').textContent = stats.total_users || 0;
+    document.getElementById('statLangs').textContent = stats.total_languages || 0;
+    document.getElementById('statEncodes').textContent = stats.total_encodes || 0;
+
+    renderUsers(users);
+    renderKeys(keys);
+  } catch (e) {
+    document.getElementById('usersBody').innerHTML = '<tr><td colspan="8" style="color:var(--red);text-align:center">// failed to load</td></tr>';
+  }
+}
+
+function renderUsers(users) {
+  const body = document.getElementById('usersBody');
+  if (!users.length) {
+    body.innerHTML = '<tr><td colspan="8" style="color:#333;text-align:center">// no users</td></tr>';
+    return;
+  }
+  body.innerHTML = users.map(u => {
+    const role = u.is_admin ? '<span class="tag tag-admin">ADMIN</span>' :
+                 u.can_create_languages ? '<span class="tag tag-create">CREATOR</span>' :
+                 '<span class="tag tag-user">USER</span>';
+    const tg = u.telegram_username ? '@' + u.telegram_username : (u.telegram_id || '--');
+    const created = u.created_at ? new Date(u.created_at).toLocaleDateString() : '--';
+    const seen = u.last_seen ? timeSince(new Date(u.last_seen)) : '--';
+    const isRecent = u.last_seen && (Date.now() - new Date(u.last_seen).getTime()) < 300000;
+    return `<tr>
+      <td>${u.id}</td>
+      <td>${u.username || 'anon'}</td>
+      <td>${tg}</td>
+      <td style="color:var(--text2)">${u.access_code_used || '--'}</td>
+      <td>${role}</td>
+      <td>${created}</td>
+      <td><span class="${isRecent ? 'online' : 'offline'}">${isRecent ? '* ' : ''}${seen}</span></td>
+      <td>${!u.is_admin ? `<button class="toggle-btn" onclick="toggleCreate(${u.id})">${u.can_create_languages ? 'revoke' : 'grant'} create</button>` : ''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function timeSince(date) {
+  const s = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+
+async function toggleCreate(userId) {
+  try {
+    await api('/admin/users/' + userId + '/toggle-create', 'POST');
+    loadDashboard();
+  } catch (e) {}
+}
+
+function renderKeys(keys) {
+  const body = document.getElementById('keysBody');
+  if (!keys.length) {
+    body.innerHTML = '<tr><td colspan="9" style="color:#333;text-align:center">// no keys generated</td></tr>';
+    return;
+  }
+  body.innerHTML = keys.map(k => {
+    const status = k.is_used
+      ? '<span class="tag tag-admin">USED</span>'
+      : '<span class="tag" style="color:var(--green);border-color:rgba(57,255,20,.3)">ACTIVE</span>';
+    const created = k.created_at ? new Date(k.created_at).toLocaleDateString() : '--';
+    const usedAt = k.used_at ? timeSince(new Date(k.used_at)) : '--';
+    return `<tr>
+      <td style="color:var(--cyan);font-family:'VT323',monospace;font-size:13px;letter-spacing:1px;cursor:pointer" onclick="navigator.clipboard.writeText('${k.key}');this.style.color='var(--green)';setTimeout(()=>this.style.color='var(--cyan)',600)" title="click to copy">${k.key}</td>
+      <td>${status}</td>
+      <td>${k.used_by_username || '--'}</td>
+      <td>${k.used_by_telegram ? '@' + k.used_by_telegram : '--'}</td>
+      <td style="color:var(--text2)">${k.used_by_ip || '--'}</td>
+      <td style="color:var(--text2)">${k.note || '--'}</td>
+      <td>${created}</td>
+      <td>${usedAt}</td>
+      <td>${!k.is_used ? `<button class="toggle-btn" onclick="deleteKey(${k.id})" title="delete">✗</button>` : ''}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function generateKey() {
+  const note = prompt('// note (optional):') || '';
+  try {
+    const data = await api('/admin/keys/generate', 'POST', { count: 1, note: note || null });
+    if (data.keys && data.keys.length) {
+      await navigator.clipboard.writeText(data.keys[0]);
+      alert('// key copied: ' + data.keys[0]);
+    }
+    loadDashboard();
+  } catch (e) {}
+}
+
+async function deleteKey(id) {
+  try {
+    await api('/admin/keys/' + id, 'DELETE');
+    loadDashboard();
+  } catch (e) {}
+}
+
+// Auto-check session
+(async () => {
+  if (adminToken) {
+    try {
+      const me = await api('/me');
+      if (me.is_admin) { showDash(); return; }
+    } catch (e) {}
+    adminToken = null;
+    localStorage.removeItem('em_admin_token');
+  }
+  showAuth();
+})();
+</script>
+</body>
+</html>

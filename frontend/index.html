@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>emojirean / #nyashnydvizh</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+
+<!-- AUTH PAGE (first screen - enter access code) -->
+<div id="authPage">
+  <div class="auth-scan"></div>
+  <div class="auth-grid"></div>
+  <canvas id="authCanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+  <div class="auth-center">
+    <div style="font-size:28px;margin-bottom:8px;opacity:.6;animation:blink 3s steps(1) infinite">&#x1F441; &nbsp; &#x1F441;</div>
+    <div class="auth-logo glitch" data-text="emojirean">emojirean</div>
+    <div class="auth-hash">#nyashnydvizh</div>
+    <div class="auth-layer">// secret language protocol</div>
+    <div class="auth-box">
+      <div class="auth-q">vvedi svoi dannye.<br><span style="color:rgba(57,255,20,.25);font-size:9px">pervyy vhod — login + parol' + kod ot admina</span></div>
+      <div class="auth-row">
+        <span class="auth-pre">&gt;</span>
+        <input class="auth-in" id="authName" placeholder="login..." autocomplete="off" spellcheck="false" maxlength="40" autofocus>
+      </div>
+      <div class="auth-row" style="margin-top:6px">
+        <span class="auth-pre">&gt;</span>
+        <input class="auth-in" id="authInput" type="password" placeholder="parol'..." autocomplete="off" spellcheck="false" maxlength="40">
+      </div>
+      <div class="auth-row" style="margin-top:6px">
+        <span class="auth-pre">&gt;</span>
+        <input class="auth-in" id="authCode" placeholder="kod (tol'ko pervyy vhod)..." autocomplete="off" spellcheck="false" maxlength="40">
+      </div>
+      <div class="auth-err" id="authErr"></div>
+    </div>
+    <div class="auth-hint">// press enter to connect</div>
+  </div>
+</div>
+
+<!-- EGG MODAL -->
+<div class="egg" id="eggModal" onclick="EM.closeEgg()">
+  <div class="egg-in" onclick="event.stopPropagation()">
+    <div class="egg-t" id="eggT">///</div>
+    <div class="egg-b" id="eggB"></div>
+    <span class="egg-close" onclick="EM.closeEgg()">[close]</span>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- MAIN APP (shown after auth) -->
+<div id="mainApp">
+<div class="outer">
+
+<div class="site-header">
+  <div class="hdr-inner">
+    <div class="hdr-left">
+      <div class="hdr-logo glitch" data-text="emojirean">emojirean</div>
+      <div class="hdr-hash">#nyashnydvizh</div>
+      <div class="hdr-sub">// bigram engine v3 | 5 deco styles | token cipher</div>
+    </div>
+    <div class="hdr-right">
+      <div class="hi">// node status</div>
+      <div><span class="blink" style="color:var(--green)">*</span> connected</div>
+      <div id="hdrLang" style="color:#222">// no language</div>
+      <div class="hdr-user" id="hdrUser"></div>
+    </div>
+  </div>
+</div>
+
+<div class="nodebar" id="nodebar">
+  <button class="nd on" data-tab="Languages">LANGUAGES</button>
+  <button class="nd" data-tab="Encode">ENCODE</button>
+  <button class="nd" data-tab="Decode">DECODE</button>
+  <button class="nd" data-tab="Bot">BOT_SIM</button>
+  <button class="nd" data-tab="Alpha">ALPHABET</button>
+  <div class="nd-right"><div class="dpulse"></div>WIRED | <span id="ndTime">--:--</span></div>
+</div>
+
+<div class="mstrip">
+  <div class="ms-inner">
+    <span class="mi">#nyashnydvizh</span><span class="mi-sep"> * </span>
+    <span class="mi">token -- eto klyuch, slovo -- eto dver'</span><span class="mi-sep"> * </span>
+    <span class="mi">emojirean bigram engine layer 07</span><span class="mi-sep"> * </span>
+    <span class="mi">only the initiated read the messages</span><span class="mi-sep"> * </span>
+    <span class="mi">powered by driptech</span><span class="mi-sep"> * </span>
+    <span class="mi">token -- eto klyuch, slovo -- eto dver'</span><span class="mi-sep"> * </span>
+    <span class="mi">emojirean bigram engine layer 07</span><span class="mi-sep"> * </span>
+    <span class="mi">only the initiated read the messages</span><span class="mi-sep"> * </span>
+    <span class="mi">powered by driptech</span><span class="mi-sep"> * </span>
+  </div>
+</div>
+
+<div class="body-wrap">
+<div class="content" id="mainContent">
+
+<!-- TAB: LANGUAGES -->
+<div id="tabLanguages">
+  <div class="panel g">
+    <div class="pt">active_language.json <div class="pd-dots"><div class="pd pd-r"></div><div class="pd pd-y"></div><div class="pd pd-g"></div></div></div>
+    <div class="pb">
+      <div class="sec-lbl">TOKEN_HASH</div>
+      <div class="token-box" id="tokenDisplay">// no active language</div>
+      <div id="tokenName" class="tok-name" style="opacity:.3">------------</div>
+      <div class="stats">
+        <div><div class="stat-v" id="sL">--</div><div class="stat-l">CHARS+BI</div></div>
+        <div><div class="stat-v" id="sH">--</div><div class="stat-l">HOMOPHONES</div></div>
+        <div><div class="stat-v" id="sE">--</div><div class="stat-l">ENTROPY</div></div>
+        <div><div class="stat-v" id="sD">--</div><div class="stat-l">CREATED</div></div>
+      </div>
+      <div class="deco-preview" id="decoPreview">// deco style will show here</div>
+      <div class="btn-row" style="margin-top:6px">
+        <button class="btn btn-a" onclick="EM.copyToken()">copy token</button>
+        <button class="btn btn-d" onclick="EM.genReaderToken()">reader token</button>
+        <button class="btn btn-g" onclick="EM.swTab('Encode')">encode</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="pt">languages[] <div class="pd-dots"><div class="pd pd-r"></div><div class="pd pd-y"></div><div class="pd pd-g"></div></div></div>
+    <div class="pb">
+      <div class="ll" id="langList"></div>
+      <div class="note">// tap to activate | x to delete</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="panel g" id="createLangPanel">
+      <div class="pt">create_language() <div class="pd-dots"><div class="pd pd-r"></div><div class="pd pd-y"></div><div class="pd pd-g"></div></div></div>
+      <div class="pb" style="display:flex;flex-direction:column;gap:5px">
+        <label class="lbl">NAME</label>
+        <input type="text" id="langName" placeholder="UNNAMED" maxlength="24">
+        <label class="lbl" style="margin-top:3px">ALPHABET</label>
+        <div class="btn-row">
+          <button class="mbtn on" id="mRU" onclick="EM.setMode('ru')">RU</button>
+          <button class="mbtn" id="mEN" onclick="EM.setMode('en')">EN</button>
+          <button class="mbtn" id="mBOTH" onclick="EM.setMode('both')">RU+EN</button>
+        </div>
+        <label class="lbl" style="margin-top:3px">TTL</label>
+        <select id="ttlSel" style="font-size:11px;color:var(--text2)">
+          <option value="never">never</option>
+          <option value="50">50 messages</option>
+          <option value="100">100 messages</option>
+          <option value="date">30 days</option>
+        </select>
+        <button class="btn btn-g btn-full" onclick="EM.genToken()" style="margin-top:4px">GENERATE TOKEN</button>
+      </div>
+    </div>
+    <div class="panel a">
+      <div class="pt">import_token() <div class="pd-dots"><div class="pd pd-r"></div><div class="pd pd-y"></div><div class="pd pd-g"></div></div></div>
+      <div class="pb" style="display:flex;flex-direction:column;gap:5px">
+        <label class="lbl">PASTE TOKEN (master or reader)</label>
+        <textarea id="importTok" rows="4" placeholder="base64..."></textarea>
+        <div class="note">master = encode+decode+alphabet<br>reader = decode only</div>
+        <button class="btn btn-a btn-full" onclick="EM.importToken()" style="margin-top:4px">IMPORT</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: ENCODE -->
+<div id="tabEncode" style="display:none">
+  <div class="panel g">
+    <div class="pt" id="encPT">encode() // no_language <div class="pd-dots"><div class="pd pd-r"></div><div class="pd pd-y"></div><div class="pd pd-g"></div></div></div>
+    <div class="pb" style="display:flex;flex-direction:column;gap:6px">
+      <label class="lbl">INPUT TEXT</label>
+      <textarea id="encIn" rows="3" placeholder="type here..."></textarea>
+      <label class="lbl" style="margin-top:3px">SHAPE</label>
+      <div class="shapes" id="shapeSel">
+        <button class="sbtn on" data-sh="grid" onclick="EM.selSh(this,'grid')">GRID</button>
+        <button class="sbtn" data-sh="triangle" onclick="EM.selSh(this,'triangle')">TRI</button>
+        <button class="sbtn" data-sh="diamond" onclick="EM.selSh(this,'diamond')">DIAM</button>
+        <button class="sbtn" data-sh="cross" onclick="EM.selSh(this,'cross')">CROSS</button>
+        <button class="sbtn" data-sh="frame" onclick="EM.selSh(this,'frame')">FRAME</button>
+        <button class="sbtn" data-sh="rnd" onclick="EM.selSh(this,'rnd')">ART</button>
+      </div>
+      <hr class="ln g">
+      <div class="sec-lbl">OPTIONS</div>
+      <div class="row-form">
+        <label style="color:rgba(57,255,20,.5);min-width:90px">NULL NOISE</label>
+        <input type="range" id="nullDensity" min="0" max="40" value="0" step="5" style="flex:1">
+        <span id="nullDensityVal" style="font-size:10px;color:var(--text2);min-width:28px">0%</span>
+      </div>
+      <div class="row-form">
+        <input type="checkbox" id="useAnchor">
+        <label for="useAnchor">ANCHOR</label>
+      </div>
+      <div class="row-form">
+        <input type="checkbox" id="artMode">
+        <label for="artMode">ART MODE (steganography)</label>
+      </div>
+      <hr class="ln g">
+      <button class="btn btn-g btn-full" onclick="EM.doEncode()">ENCODE</button>
+      <label class="lbl" style="margin-top:3px">OUTPUT</label>
+      <div class="shape-out" id="encOut"><div class="ph-txt">// waiting...</div></div>
+      <div class="sec-lbl" style="margin-top:6px">COPY MODE</div>
+      <div class="copy-modes">
+        <button class="copy-mode-btn" data-mode="flat" onclick="EM.copyEncoded('flat')">FLAT<br><span style="color:#222;font-size:8px">single line</span></button>
+        <button class="copy-mode-btn" data-mode="shaped" onclick="EM.copyEncoded('shaped')">SHAPED<br><span style="color:#222;font-size:8px">with form</span></button>
+        <button class="copy-mode-btn" data-mode="artistic" onclick="EM.copyEncoded('artistic')">ARTISTIC<br><span style="color:#222;font-size:8px">with deco</span></button>
+      </div>
+      <button class="btn btn-d" onclick="EM.toBot()" style="margin-top:4px">BOT_SIM</button>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: DECODE -->
+<div id="tabDecode" style="display:none">
+  <div class="panel a">
+    <div class="pt" id="decPT">decode() // no_language <div class="pd-dots"><div class="pd pd-r"></div><div class="pd pd-y"></div><div class="pd pd-g"></div></div></div>
+    <div class="pb" style="display:flex;flex-direction:column;gap:6px">
+      <label class="lbl">PASTE MESSAGE</label>
+      <textarea id="decIn" rows="5" placeholder="paste flat / shaped / artistic..."></textarea>
+      <div class="note">// all 3 formats decode the same way</div>
+      <button class="btn btn-a btn-full" onclick="EM.doDecode()">DECODE</button>
+      <label class="lbl">RESULT</label>
+      <div class="dec-out" id="decOut"><span style="color:#1a1a1a">// waiting...</span></div>
+      <div id="decMeta" style="font-size:9px;color:#333;margin-top:3px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: BOT SIM -->
+<div id="tabBot" style="display:none">
+  <div class="panel">
+    <div class="pt">bot_simulator -- inline_mode <div class="pd-dots"><div class="pd pd-r"></div><div class="pd pd-y"></div><div class="pd pd-g"></div></div></div>
+    <div class="pb">
+      <div style="font-size:10px;color:#333;margin-bottom:8px">// type message, pick variant, send to chat</div>
+      <div class="tg">
+        <div class="tg-bar">
+          <span class="tg-at">inline</span>
+          <input class="tg-inp" id="botIn" placeholder="type message..." oninput="EM.simType()">
+          <button class="tg-send" onclick="EM.simSend()">send</button>
+        </div>
+        <div class="tg-opts" id="botOpts"><div style="font-size:11px;color:#1a2a1a;text-align:center;padding:8px">// start typing...</div></div>
+        <div class="chat" id="chatBox"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: ALPHABET -->
+<div id="tabAlpha" style="display:none">
+  <div class="panel">
+    <div class="pt">alphabet_map <div class="pd-dots"><div class="pd pd-r"></div><div class="pd pd-y"></div><div class="pd pd-g"></div></div></div>
+    <div class="pb"><div id="alphaBox"><div style="font-size:11px;color:#222;text-align:center;padding:20px">// select language first</div></div></div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sw">
+    <div class="sw-t">clock</div>
+    <div class="sw-b">
+      <div class="px-clock" id="pxClock">00:00:00</div>
+      <div class="px-date" id="pxDate">...</div>
+    </div>
+  </div>
+  <div class="sw">
+    <div class="sw-t">visitors</div>
+    <div class="sw-b" style="text-align:center">
+      <div style="font-size:8px;color:#1a2a1a;margin-bottom:3px;letter-spacing:1px">YOU ARE VISITOR</div>
+      <div class="hit-counter-wrap" id="vcnt"></div>
+    </div>
+  </div>
+  <div class="sw">
+    <div class="sw-t">node_status</div>
+    <div class="sw-b">
+      <div class="sysstat">
+        <div><span class="k">status</span><span class="v"><span class="blink" style="color:var(--green)">*</span> online</span></div>
+        <div><span class="k">engine</span><span class="v">bigram v3</span></div>
+        <div><span class="k">encoded</span><span class="v" id="sbEnc">000000</span></div>
+        <div><span class="k">langs</span><span class="v" id="sbLangs">0</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="sw">
+    <div class="sw-t">music.exe</div>
+    <div class="sw-b">
+      <div class="music-track" id="npTrack">NULL_SIGNAL.flac</div>
+      <div class="music-artist" id="npArtist">#nyashnydvizh</div>
+      <div class="music-prog"><div class="music-fill" id="npFill"></div></div>
+      <div class="music-ctrl">
+        <button class="mc-b" onclick="EM.prevTrack()">|&lt;</button>
+        <button class="mc-b" onclick="EM.nextTrack()">&gt;|</button>
+        <span class="mc-t" id="npTime">0:00</span>
+      </div>
+      <button class="music-btn" id="musicBtn" onclick="EM.toggleMusic()">play music</button>
+      <div class="music-viz">
+        <div class="mv-bar"></div><div class="mv-bar"></div><div class="mv-bar"></div>
+        <div class="mv-bar"></div><div class="mv-bar"></div><div class="mv-bar"></div>
+        <div class="mv-bar"></div><div class="mv-bar"></div>
+      </div>
+    </div>
+  </div>
+  <div class="sw">
+    <div class="sw-t">nyan_pet</div>
+    <div class="sw-b">
+      <div class="pet-wrap" onclick="EM.petClick()">
+        <div class="pet-sprite" id="petSprite">&#x1F63A;</div>
+        <div class="pet-mood" id="petMood">nyaa~</div>
+      </div>
+      <button class="btn btn-d btn-full" onclick="EM.feedPet()" style="font-size:9px;padding:3px">feed</button>
+    </div>
+  </div>
+  <div class="sw">
+    <div class="sw-t">mood.exe</div>
+    <div class="sw-b">
+      <div class="mood-g">
+        <span class="mo" onclick="EM.setMood(this,'boredom')">&#x1F611;</span>
+        <span class="mo" onclick="EM.setMood(this,'anxiety')">&#x1F630;</span>
+        <span class="mo on" onclick="EM.setMood(this,'dissociation')">&#x1F636;&#x200D;&#x1F32B;&#xFE0F;</span>
+        <span class="mo" onclick="EM.setMood(this,'vibe')">&#x1F60E;</span>
+        <span class="mo" onclick="EM.setMood(this,'paranoia')">&#x1F440;</span>
+        <span class="mo" onclick="EM.setMood(this,'void')">&#x1F311;</span>
+        <span class="mo" onclick="EM.setMood(this,'chaos')">&#x1F300;</span>
+        <span class="mo" onclick="EM.setMood(this,'nyash')">&#x1F338;</span>
+      </div>
+      <div class="mo-lbl" id="moLbl">dissociation</div>
+    </div>
+  </div>
+  <div class="sw">
+    <div class="sw-t">guestbook.txt</div>
+    <div class="sw-b">
+      <div class="gb-scr" id="gbList"></div>
+      <div class="gb-f">
+        <input class="gb-i" id="gbN" placeholder="// nick" maxlength="12">
+        <input class="gb-i" id="gbM" placeholder="// message" maxlength="40">
+        <button class="gb-btn" onclick="EM.addGb()">sign</button>
+      </div>
+    </div>
+  </div>
+  <div class="sw">
+    <div class="sw-t">quote_db</div>
+    <div class="sw-b">
+      <div class="qb" id="qb">...</div>
+      <button class="qnxt" onclick="EM.nextQ()">next</button>
+    </div>
+  </div>
+  <div class="uc">// UNDER CONSTRUCTION //</div>
+  <div style="padding:6px 8px;text-align:center">
+    <div style="font-size:8px;color:#1a1a1a;line-height:2;letter-spacing:1px">
+      best viewed<br>1024x768<br>
+      <span class="blink" style="color:#111">// ie6 ok</span>
+    </div>
+  </div>
+</div><!-- /sidebar -->
+</div><!-- /body-wrap -->
+
+<div class="footer">
+  <a href="#">[about]</a> | <a href="#">[channel]</a> | <a href="#">[faq]</a>
+  <br>#nyashnydvizh | emojirean v3.0 bigram | <span class="blink" style="color:rgba(57,255,20,.3)">*</span> | 2026
+</div>
+</div><!-- /outer -->
+</div><!-- /mainApp -->
+
+<script src="/static/js/engine.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
