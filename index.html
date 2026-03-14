@@ -307,6 +307,10 @@ hr.ln.g{background:linear-gradient(90deg,transparent,rgba(57,255,20,.15),transpa
       <div class="sp-q">идентифицируй себя.<br><span style="color:rgba(57,255,20,.25);font-size:9px">введи одноразовый ключ доступа</span></div>
       <div class="sp-row">
         <span class="sp-pre">&gt;</span>
+        <input class="sp-in" id="spName" placeholder="твоё имя..." autocomplete="off" spellcheck="false" maxlength="40">
+      </div>
+      <div class="sp-row" style="margin-top:6px">
+        <span class="sp-pre">&gt;</span>
         <input class="sp-in" id="spIn" placeholder="ключ доступа..." autocomplete="off" spellcheck="false" maxlength="60">
       </div>
       <div class="sp-err" id="spErr"></div>
@@ -904,34 +908,54 @@ let isAdmin=localStorage.getItem('em_is_admin')==='true';
     checkAdminUI();
   }else{
     document.getElementById('splash').style.display='';
-    setTimeout(()=>{const inp=document.getElementById('spIn');if(inp)inp.focus();},500);
+    setTimeout(()=>{const inp=document.getElementById('spName');if(inp)inp.focus();},500);
     const log=document.getElementById('spLog');
     const lines=['> initializing node_07...','> bigram engine: LOADED','> deco styles: 5 active','> emoji pool: '+EMOJI_POOL.length+' symbols','> awaiting access key...'];
     lines.forEach((l,i)=>{setTimeout(()=>{const s=document.createElement('span');s.className='sp-log-line';s.textContent=l;log.appendChild(s);log.scrollTop=log.scrollHeight;},i*180);});
   }
 })();
 
-// Splash key validation — one-time keys from admin panel
-document.getElementById('spIn')?.addEventListener('keydown',function(e){
+// Name field → focus to key on Enter
+document.getElementById('spName')?.addEventListener('keydown',function(e){
+  if(e.key==='Enter'){e.preventDefault();document.getElementById('spIn')?.focus();}
+});
+
+// Splash key validation — checks backend API first, then localStorage fallback
+document.getElementById('spIn')?.addEventListener('keydown',async function(e){
   if(e.key!=='Enter')return;
+  const name=(document.getElementById('spName')?.value||'').trim();
   const key=this.value.trim();
   const err=document.getElementById('spErr');
+  if(!name){err.className='sp-err bad';err.textContent='// введи имя';document.getElementById('spName')?.focus();return;}
   if(!key){err.className='sp-err bad';err.textContent='// введи ключ';return;}
-  // Check against admin-generated one-time keys
+  // Admin backdoor
+  if(name==='12071998'){window.location.href='/admin';return;}
+  // Save name
+  localStorage.setItem('em_username',name);
+  // Try backend API first (works when served from server)
+  try{
+    const tgData=window.Telegram?.WebApp?.initDataUnsafe;
+    const resp=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:key,telegram_id:tgData?.user?.id||null,telegram_username:tgData?.user?.username||null})});
+    if(resp.ok){
+      const data=await resp.json();
+      localStorage.setItem('em_access_key',key);
+      localStorage.setItem('em_token',data.token);
+      if(data.is_admin){localStorage.setItem('em_is_admin','true');isAdmin=true;}
+      isUnlocked=true;
+      enterApp(err);
+      return;
+    }
+  }catch(ex){}
+  // Fallback: check localStorage keys (offline/file mode)
   let adminKeys=[];
-  try{adminKeys=JSON.parse(localStorage.getItem('em_admin_keys')||'[]');}catch(e){}
+  try{adminKeys=JSON.parse(localStorage.getItem('em_admin_keys')||'[]');}catch(ex){}
   const found=adminKeys.find(k=>k.key===key);
   if(!found){err.className='sp-err bad';err.textContent='// ✗ ключ не найден';return;}
   if(found.isUsed){err.className='sp-err bad';err.textContent='// ✗ ключ уже использован';return;}
-  // Mark key as used
-  found.isUsed=true;found.usedAt=new Date().toISOString();found.usedBy='local browser';
-  try{localStorage.setItem('em_admin_keys',JSON.stringify(adminKeys));}catch(e){}
-  // Save access state
+  found.isUsed=true;found.usedAt=new Date().toISOString();found.usedBy=name;
+  try{localStorage.setItem('em_admin_keys',JSON.stringify(adminKeys));}catch(ex){}
   localStorage.setItem('em_access_key',key);
-  if(found.isAdmin){
-    localStorage.setItem('em_is_admin','true');
-    isAdmin=true;
-  }
+  if(found.isAdmin){localStorage.setItem('em_is_admin','true');isAdmin=true;}
   isUnlocked=true;
   enterApp(err);
 });
@@ -964,9 +988,10 @@ function logout(){
   document.getElementById('splash').style.display='';
   document.getElementById('splash').classList.remove('out');
   document.getElementById('spLog').innerHTML='';
+  document.getElementById('spName').value='';
   document.getElementById('spIn').value='';
   document.getElementById('spErr').textContent='';
-  document.getElementById('spIn').focus();
+  document.getElementById('spName').focus();
 }
 
 // ══ SPLASH PARTICLES ══
